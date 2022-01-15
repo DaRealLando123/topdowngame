@@ -1,0 +1,30 @@
+        How to make a game
+
+[   step one: make a game         ]
+[   step two: become ea           ]
+[   step three: profit            ]
+
+---Important things to add---
+Shop(s),
+Enemies,
+Zones,
+Weapons,
+Loot boxes
+
+---Important things to add later---
+Different Xp,
+Usernames, 
+(Wider varity of gameplay to keep people playing,)
+
+---QOL things to add later---
+Party system,
+Chat/Gamelog,
+Main menu,
+direct paypal link for loot boxes
+
+---Game deciders---
+Make server files avalable and make connecting with ips/ngrok?
+or just pay $7 / month i literally make like 100 a day dfassadgdgsf
+
+---Probably should do these things but I don't want to---
+Optimize multiplayer packet size (figure out how to round to 10ths so server doesn't have to send 0.9488176290419506492,)
