@@ -10,11 +10,15 @@ const stamina = 8;
 const maxStamina = 9;
 const staminaRechargeDelay = 10;
 const staminaRechargeDelayBase = 11; //Added stamina recharging which could be a skill you could upgrade
+const gold = 12;
+const combatLv = 13;
+const combatXp = 14;
+const combatXpNeeded = 15;
 
 var players = [];
 var playersLastMessage = [];
 var playersJoined = [];
-var player = [0, 0, 0, 0, 0, 0,100,100,100,100,0,100];
+var player = [0, 0, 0, 0, 0, 0,75,100,100,100,0,100,0,1,12,25];
 var level = 1;
 var cam;
 var platforms = [];
@@ -55,6 +59,7 @@ var hudOffset = 0;
 var playerSpeed = 0;
 var chatHistory = ["The latest chat messages will appear here."];
 var showChat = false;
+var showAdvancedHud = false;
 var lastMessage = "";
 var lastUsername = "";
 var fovDampening = (3.14159 / (1.8 - fovCrouch - fovOffset));
@@ -439,7 +444,7 @@ function keyPressed() {
     }
     
   if (keyCode === 192) { //showChat
-    if (keyIsDown(192) && showChat === false && escMenu === false) {
+    if (keyIsDown(192) && showChat === false && inMenu === false) {
       exitPointerLock();
       inMenu = true;
       showChat = true;
@@ -452,6 +457,16 @@ function keyPressed() {
       inMenu = false;
       chatInput.hide();
       chatInput.value("");
+    }
+  }
+
+  if (keyCode === 187) { //showAdvancedHud
+    if (keyIsDown(187) && showAdvancedHud === false && inMenu === false) {
+      showAdvancedHud = true;
+    }
+    else{
+      requestPointerLock();
+      showAdvancedHud = false;
     }
   }
   
@@ -539,10 +554,15 @@ function displayHud(){
 
       rect(-((window.innerWidth / window.innerHeight) / 1.7), 0.28, 0.6, 0.08);
 
+      rect(-(((window.innerWidth / window.innerHeight) / 1.7)+0.07), 0.56, 0.06, -0.28);
+
         translate(0,0,0.0005);
 
       fill(120,20,20);
       rect(-(((window.innerWidth / window.innerHeight) / 1.7)-0.02), 0.4, (0.56*player[health]) / player[maxHealth], 0.14);
+
+      fill(50,125,250);
+      rect(-(((window.innerWidth / window.innerHeight) / 1.7)+0.05), 0.54, 0.02, ((player[combatXp]) / player[combatXpNeeded]) * -0.24);
 
       if(player[stamina] >= 0.1){
         fill(30,100,30);
@@ -559,9 +579,12 @@ function displayHud(){
       fill(20);
       rect(-(((window.innerWidth / window.innerHeight) / 1.7)-0.02), 0.3, 0.56, 0.04);
 
+      fill(20);
+      rect(-(((window.innerWidth / window.innerHeight) / 1.7)+0.05), 0.54, 0.02, -0.24);
+
         translate(0,0,-0.00045);
         
-      if(showChat === true){
+      if(showChat === true || showAdvancedHud === true){
         fill(0)
         //rect(-((window.innerWidth / window.innerHeight) / 1.7),0.1,0.4,-0.40)
         for(var i = 0; i < chatHistory.length; i++){
@@ -572,13 +595,19 @@ function displayHud(){
           text(chatHistory[i],-((window.innerWidth / window.innerHeight) / 1.7)+ 0.01, (0.05 * i)-0.54);
           translate(0,0,-0.0005);
         }
-      } else{
+      } else {
         translate(0,0,0.0005);
         textSize(.03);
         textAlign(LEFT,CENTER);
         fill(255);
         text("Press ` to expand the chat\n "+chatHistory[chatHistory.length - 1],-((window.innerWidth / window.innerHeight) / 1.7)+ 0.01,-0.54);
-        //text("Press u to change your username\nCurrent: "+username,-((window.innerWidth / window.innerHeight) / 1.7)+ 1.0,-0.54);
+        //coordinates
+        if(showAdvancedHud === true){
+          text("Exact Coordinates: " + round(player[x]) + " " + round(player[y]) + " " + round(player[z]),-((window.innerWidth / window.innerHeight) / 1.7)+ 1.0,-0.54);
+        translate(0,0,-0.0005);
+        } else {
+          text("Coordinates: " + round(player[x] / 10) + " " + round(player[y] / 10) + " " + round(player[z] / 10),-((window.innerWidth / window.innerHeight) / 1.7)+ 1.0,-0.54);
+        }
         translate(0,0,-0.0005);
         }
       
