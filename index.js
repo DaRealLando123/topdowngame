@@ -78,7 +78,8 @@ function spawning(){
 
 }
 
-class Enemy{
+
+class Enemy{ // ENEMY //
 
   constructor(xPos,yPos,zPos,size,height,detectRadius,meleeRadius,xpDrop,coinDrop,health,damage,speed,r,g,b,minXB,maxXB,minYB,maxYB,minZB,maxZB){
     this.x = xPos;
