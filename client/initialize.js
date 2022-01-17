@@ -14,11 +14,12 @@ const gold = 12;
 const combatLv = 13;
 const combatXp = 14;
 const combatXpNeeded = 15;
+const playerLevel = 16;
 
 var players = [];
 var playersLastMessage = [];
 var playersJoined = [];
-var player = [0, 0, 0, 0, 0, 0,75,100,100,100,0,100,0,1,12,25];
+var player = [0, 0, 0, 0, 0, 0,75,100,100,100,0,100,0,1,12,25,1];
 var level = 1;
 var cam;
 var draggables = [];
@@ -75,6 +76,10 @@ var loaded = 0;
 var socket;
 var color;
 
+var canvastest;
+
+var currentCanvas = "3d";
+
 function preload() {
   textures.push(loadImage("images/SwampSq.png",loading));
   textures.push(loadImage("images/MountainsSq.png",loading));
@@ -92,6 +97,9 @@ function loading(){
 }
 
 function setup() {
+  canvastest = createCanvas(window.innerWidth - 20, window.innerHeight - 20,WEBGL);
+  cam = createCamera();
+
     platforms.push(new Rect(0, 350, 0, 500, 500, 500, 1, 0));
     platforms.push(new Rect(-275, -100, 0, 50, 500, 500, 1, 1));
     platforms.push(new Rect(275, -100, 0, 50, 500, 500, 1, 1));
@@ -100,9 +108,6 @@ function setup() {
     platforms.push(new Rect(0, -100, 275, 500, 500, 50, 1, 1));
 
     platforms.push(new Rect(250, 350, -750, 1500, 500, 1000, 1, 0));
-
-  createCanvas(window.innerWidth - 20, window.innerHeight - 20,WEBGL);
-  cam = createCamera();
 
   textFont(inconsolata);
   textAlign(CENTER,CENTER);
@@ -121,4 +126,18 @@ function setup() {
 
   chatInput = createInput();
   chatInput.hide();
+
+}
+
+function swapCanvas(){
+  canvastest.remove();
+  if(currentCanvas === "2d"){
+    canvastest = createCanvas(window.innerWidth - 20, window.innerHeight - 20,WEBGL);
+    canvas = "3d";
+  } else {
+    canvastest = createCanvas(window.innerWidth - 20, window.innerHeight - 20,P2D);
+    background(100);
+    currentCanvas = "2d";
+  }
+  console.log("swapped canvas");
 }

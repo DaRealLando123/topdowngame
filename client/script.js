@@ -1,5 +1,5 @@
 
-function draw() {
+function draw() { if (currentCanvas === "3d"){
   if(chatHistory.length > 10){
     chatHistory.shift();
   }
@@ -271,6 +271,7 @@ function draw() {
   }
   cam.setPosition(player[x], player[y] - crouchDampening, player[z]);
   displayHud();
+}
 }
 
 function mouseReleased(){

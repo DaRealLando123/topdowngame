@@ -17,9 +17,10 @@ var spawnOffsets = [0];
 var dayTime = 0;
 var enemyArray = [];
 var chatLog = ["-Start of Log-"];
+//var projectiles = [,["fireball",x,y,z,r,rt,power],["arrow",x,y,z,r,rt,power],]
 
 //Early idea on how save files will be implemented
-var playerSaveData = [,[[0,0,0,0,0],"DaRealLando123","testPassword"],[[0,0,0,0,0],"TestAccount2","passwordTest"],];
+//var playerSaveData = [,[[lastinn,hp,maxhp,mp,maxmp,maxstamina,combatlv,combatxp,combatxpneeded,playerlevel],"DaRealLando123","testPassword"],[[0,0,0,0,0],"TestAccount2","passwordTest"],];
 
 io.sockets.on('connection', newConnection); //when a player connects
 
