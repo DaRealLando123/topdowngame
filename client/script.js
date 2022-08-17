@@ -1,586 +1,483 @@
+const grassDetail = [0.2, 80]; //change per box, color change amount
 
-function draw() { if (currentCanvas === "3d"){
-  if(chatHistory.length > 10){
-    chatHistory.shift();
+var xOffset = -12;
+var yOffset = -10;
+
+var x = 100;
+var y = 100;
+var holdingMouse = [false, false];
+
+var heldx;
+var heldy;
+
+var screenWidth;
+var screenHeight;
+var ssm;
+
+var farmImages = [];
+var barrackImages = [];
+var coreImages = [];
+var wallImages = [];
+
+var chat = ["Beginning of Chat"];
+var showChat = 500;
+
+var showCursors = true;
+
+var buildings = []; //doesnt change anything
+var money = 0; //doesnt change anything
+
+var hudMenu = [false, 0] //inmenu, what menu
+//the menu number is the same as the number pressed to open it (farms=1, defense=2, ect)
+
+var buildingSelected;//used to store what item will be placed when click (what item u chose in menu)
+
+var tilesSelected = [1, 1];
+
+var clr;
+
+
+
+function preload() {
+  farmImages.push(loadImage("assets/farm.png"));
+  wallImages.push(loadImage("assets/woodwall.png"));
+  wallImages.push(loadImage("assets/stonewall.png"));
+  wallImages.push(loadImage("assets/ironwall.png"));
+  barrackImages.push(loadImage("assets/barrack.png"));
+  coreImages.push(loadImage("assets/core.png"));
+}
+
+var menuOptions;
+
+function setup() {
+  createCanvas(500, 500);
+  menuOptions = [
+
+    [["Farm", 150, farmImages[0]]],
+    [["Wall", 20, wallImages[0]]],
+    [["Barrack", 450, barrackImages[0]]]
+
+  ];
+}
+
+function draw() {
+
+  if (hudMenu[0] === false) {
+    buildingSelected = null;
   }
-  if(username === null || username === ""){username = "Default"}
 
-  playerSpeed = abs(player[xvel]) + abs(player[zvel]);
-
-  ambientLight(currentAmbient);
-  directionalLight(currentLight[0],currentLight[1],currentLight[2], -1, 1, -1);
-
-  stroke(69/2,105/2,38/2);
-  strokeWeight(1);
-
- //movement + camera
-  if(abs(player[xvel]) < 0.00001){
-    player[xvel] = 0;
-  }
-  if(abs(player[zvel]) < 0.00001){
-    player[zvel] = 0;
-  }
-
-  if (keyIsDown(67) && showChat === false) {
-    crouching = 1;
+  if (window.innerWidth - 20 > window.innerHeight - 20) {
+    screenWidth = window.innerHeight - 20;
+    screenHeight = window.innerHeight - 20;
+  } else if (window.innerWidth - 20 < window.innerHeight - 20) {
+    screenWidth = window.innerWidth - 20;
+    screenHeight = window.innerWidth - 20;
   } else {
-    crouching = 0;
+    screenWidth = window.innerWidth - 20;
+    screenHeight = window.innerHeight - 20;
   }
 
-  if (crouching === 1) {
-    playerHeight = 18;
-    hudOffset = 12;
-    fovCrouch = 0;
-  } else if (crouching === 0) {
-    playerHeight = 30;
-    hudOffset = 0;
-    fovCrouch = 0.05;
+  ssm = (screenWidth / 500);
+  x += movedX;
+  y += movedY;
+
+  if (x >= 500) {
+    x = 499;
+  }
+  if (x <= 0) {
+    x = 1;
   }
 
-  crouchDampening += ((playerHeight - 5) - crouchDampening) / 5
-  crouchDampening = round(crouchDampening, 5);
-
-  fovOffset = round(abs(player[xvel]) + abs(player[zvel]), 2) / 50;
-
-  if(fovOffset > 20/50){
-    fovOffset = 20/50;
+  if (y <= 0) {
+    y = 1;
+  }
+  if (y >= 500) {
+    y = 499;
   }
 
-  fovDampening += ((PI / (1.8 - fovCrouch - fovOffset)) - fovDampening) / 20
-  fovDampening = round(fovDampening,5);
-
-  resizeCanvas(window.innerWidth - 20, window.innerHeight - 20);
-  cam.perspective(fovDampening, width / height, 0.1, 10000);
+  resizeCanvas(screenWidth, screenHeight);
 
   clear();
+  for (i = 0; i < 21; i++) {
+    for (j = 0; j < 25; j++) {
+      strokeWeight(1);
+      stroke(0, 60, 0);
+      let thisX = xOffset + j;
+      let thisY = yOffset + i;
+      fill(0, (100 - (grassDetail[1] / 2)) + (noise((j + xOffset - 10000) * grassDetail[0], (i + yOffset - 10000) * grassDetail[0]) * grassDetail[1]), 0);
 
-  console.log(speedMult);
+      rect((j * 20) * ssm, (i * 20) * ssm, 20 * ssm, 20 * ssm);
 
-  if(keyIsDown(87) || keyIsDown(65) || keyIsDown(83) || keyIsDown(68)){
-    if(keyIsDown(16)){
-      if(player[stamina] > 0 && crouching === 0){
-        player[stamina] -= 1 * (deltaTime / 40);
-        speedMult = 2;
-        player[staminaRechargeDelay] = player[staminaRechargeDelayBase];
-      } else {
-        speedMult = 1;
+      for (k = 0; k < buildings.length; k++) {
+        if (buildings[k][1] === thisX && buildings[k][2] === thisY) {
+          fill(0);
+          rect((j * 20) * ssm, (i * 20) * ssm, 20 * ssm, 20 * ssm);
+          if (buildings[k][0] === "Core") {
+            image(coreImages[buildings[k][3] - 1], (j * 20) * ssm, (i * 20) * ssm, 20 * ssm, 20 * ssm);
+          }
+          if (buildings[k][0] === "Farm") {
+            image(farmImages[buildings[k][3] - 1], (j * 20) * ssm, (i * 20) * ssm, 20 * ssm, 20 * ssm);
+          }
+          if (buildings[k][0] === "Wall") {
+            image(wallImages[buildings[k][3] - 1], (j * 20) * ssm, (i * 20) * ssm, 20 * ssm, 20 * ssm);
+          }
+          if (buildings[k][0] === "Barrack") {
+            image(barrackImages[buildings[k][3] - 1], (j * 20) * ssm, (i * 20) * ssm, 20 * ssm, 20 * ssm);
+          }
+        }
       }
-    } else {
-      if(player[staminaRechargeDelay] > 0){
-        player[staminaRechargeDelay] -= 0.1 * deltaTime; 
-        speedMult = 1;
+    }
+  }
+
+  switch (buildingSelected) {
+
+    case "Farm":
+      image(farmImages[0], x * ssm, y * ssm, 10 * ssm, 10 * ssm);
+      break;
+
+    case "Wall":
+      image(wallImages[0], x * ssm, y * ssm, 10 * ssm, 10 * ssm);
+      break;
+
+    case "Barrack":
+      image(barrackImages[0], x * ssm, y * ssm, 10 * ssm, 10 * ssm);
+      break;
+
+  }
+
+
+  for (var i = 0; i < players.length; i++) {
+    if (showCursors === true) {
+
+      clr = color(0, 255, 0);
+      clr.setAlpha(120);
+      noStroke();
+      fill(clr);
+      circle(players[i].x * ssm, players[i].y * ssm, 5 * ssm);
+      clr = color(0, 255, 0);
+      clr.setAlpha(50);
+      fill(clr);
+
+      switch (players[i].bs) {
+
+        case "Farm":
+          image(farmImages[0], players[i].x * ssm, players[i].y * ssm, 10 * ssm, 10 * ssm);
+          break;
+
+        case "Wall":
+          image(wallImages[0], players[i].x * ssm, players[i].y * ssm, 10 * ssm, 10 * ssm);
+          break;
+
+        case "Barrack":
+          image(barrackImages[0], players[i].x * ssm, players[i].y * ssm, 10 * ssm, 10 * ssm);
+          break;
       }
-    }
-  } else {
-      if(player[staminaRechargeDelay] === 0 && player[stamina] < player[maxStamina]){
-        player[stamina] += 0.6 * (deltaTime / 40);
+
+      if (players[i].hm === true) {
+        rect(players[i].hx * ssm, players[i].hy * ssm, ((players[i].x) - players[i].hx) * ssm, ((players[i].y) - players[i].hy) * ssm);
       }
-    speedMult = 1;
-      if(player[staminaRechargeDelay] > 0){
-        player[staminaRechargeDelay] -= 1; 
-      }
-  }
 
-  if(player[staminaRechargeDelay] <= 0 && keyIsDown(16) === false || crouching === 1){
-      if(player[stamina] < player[maxStamina]){
-        player[stamina] += 0.6 * (deltaTime / 40);
-      }
-      speedMult = 1;
-    }
-
-  if(player[stamina] > player[maxStamina]){
-    player[stamina] = player[maxStamina];
-  }
-
-  background(currentBackground[0],currentBackground[1],currentBackground[2]);
-
-  cam.tilt(-camTilt);
-  cam.pan(-camRotation);
-
-  if (crouching === 0 && inMenu === false || playerSpeed < 0.3 && inMenu === false) {
-
-    if (keyIsDown(87)) { //W
-      player[zvel] -= Math.cos(camRotation) * (0.01 * (1.5/(2-onGround))) * deltaTime * speedMult;
-      player[xvel] -= Math.sin(camRotation) * (0.01 * (1.5/(2-onGround))) * deltaTime * speedMult;
-    }
-    if (keyIsDown(65)) { //A
-      player[zvel] -= Math.cos(camRotation + (PI / 2)) * (0.008 * (1.5/(2-onGround))) * deltaTime * speedMult;
-      player[xvel] -= Math.sin(camRotation + (PI / 2)) * (0.008 * (1.5/(2-onGround))) * deltaTime * speedMult;
-    }
-    if (keyIsDown(83)) { //S
-      player[zvel] -= Math.cos(camRotation + ((PI / 2) * 2)) * (0.008 * (1.5/(2-onGround))) * deltaTime * speedMult;
-      player[xvel] -= Math.sin(camRotation + ((PI / 2) * 2)) * (0.008 * (1.5/(2-onGround))) * deltaTime * speedMult;
-    }
-    if (keyIsDown(68)) { //D
-      player[zvel] -= Math.cos(camRotation + ((PI / 2) * 3)) * (0.008 * (1.5/(2-onGround))) * deltaTime * speedMult;
-      player[xvel] -= Math.sin(camRotation + ((PI / 2) * 3)) * (0.008 * (1.5/(2-onGround))) * deltaTime * speedMult;
-    }
-
-  }
-
-  for (var i = 0; i < platforms.length; i++) {
-    platforms[i].checkCollision();
-  }
-
-  player[x] += player[xvel] * deltaTime / 10;
-  player[z] += player[zvel] * deltaTime / 10;
-
-    if (crouching === 0) {
-      if (abs(player[xvel] + player[zvel]) > 1) {
-        player[xvel] -= (player[xvel] / (50 * (2 - onGround))) * deltaTime;
-        player[zvel] -= (player[zvel] / (50 * (2 - onGround))) * deltaTime;
-      } else if (abs(player[xvel] + player[zvel]) <= 1) {
-        player[xvel] -= (player[xvel] / (100 * (2 - onGround))) * deltaTime;
-        player[zvel] -= (player[zvel] / (100 * (2 - onGround))) * deltaTime;
-      }
-    } else if (crouching === 1) {
-      player[xvel] -= (player[xvel] / (500 * (2 - onGround))) * deltaTime;
-      player[zvel] -= (player[zvel] / (500 * (2 - onGround))) * deltaTime;
-    }
-
-  player[y] += player[yvel];
-  player[yvel] += gravity * deltaTime;
-    if(inMenu === false){
-      camRotation += (round(-movedX, 4) * 0.003);
-      camTilt += (round(movedY, 4) * 0.003);
-    }
-
-  if (camTilt >= 1.45) {
-    camTilt = 1.45;
-  } else if (camTilt <= -1.45) {
-    camTilt = -1.45;
-  }
-
-  cam.pan(camRotation);
-  cam.tilt(camTilt);
-
-  onGround = 0;
-
-  pointLight(153, 72, 24,player[x],player[y] - crouchDampening,player[z]);
-
-  for (var i = 0; i < platforms.length; i++) {
-    platforms[i].checkCollision();
-    platforms[i].draw();
-  }
-
-  for (var i = 0; i < draggables.length; i++) {
-    draggables[i].over();
-    draggables[i].show();
-  }
-
-  for (var i = 0; i < enemyArray.length; i++) {
-    translate(enemyArray[i].x, enemyArray[i].y, enemyArray[i].z);
-    translate(0, -enemyArray[i].height/2, 0);
-
-    box(enemyArray[i].size, enemyArray[i].height, enemyArray[i].size);
-
-    translate(0, enemyArray[i].height/2, 0);
-    translate(-enemyArray[i].x, -enemyArray[i].y, -enemyArray[i].z);
-  }
-
-  //multiplayer data to be sent
-  noStroke();
-  var data = {
-    x: round(player[x],2),
-    y: round(player[y],2),
-    z: round(player[z],2),
-    t: 100,
-    id: socket.id,
-    r: round(camRotation,6),
-    rt: round(camTilt,6),
-    c: crouching,
-    hi: heldItem,
-    u: username
-  }
-
-  
-
-  socket.emit('packet', data);
-
-
-  for(i = 0; i < players.length; i++){  //MULTIPLAYER DISPLAY
-
-    translate(players[i].x, players[i].y - 10, players[i].z); 
-    rotateY(players[i].r);
-    if(players[i].c === 1){
-      rotateX(-70);
-    }
-    
-  if(dist(player[x], player[y], player[z], players[i].x, players[i].y, players[i].z) <= 3000){
-    translate(-8,0,-8);
-    rotateZ(PI);
-    //helditem display
-    texture(textures[2]);
-    if(players[i].hi === "sword"){
-      scale(20);
-      model(models[0]);
-      scale(0.05);
-    }
-    if(players[i].hi === "bow"){
-      fill(100,50,0);
-      scale(.2);
-      model(models[1]);
-      scale(5);
-    }
-    rotateZ(-PI);
-    translate(8,0,8);
-
-    fill(50,50,120);
-    cylinder(7,20)
-
-    translate(0,-13,0);
-    rotateX(players[i].rt);
-    translate(0,-5,0);
-    if(players[i].c === 1){
-     rotateX(-60);
-    }
-    box(10);
-    if(players[i].c === 1){
-     rotateX(60);
-    }
-    translate(0,5,0);
-    rotateX(-players[i].rt);
-    translate(0,13,0);
-  }
-    if(players[i].c === 1){
-     rotateX(70);
-    }
-    rotateY(-players[i].r)
-    translate(-players[i].x, -(players[i].y - 10), -players[i].z); 
-
-    players[i].t -= 1;
-
-    if(players[i].t <= 0){
-      chatHistory.push("<Client> Player " + players[i].id + " unloaded from client");
-      players.splice(i,1);
-    }
-  }
-  for(i = 0; i < lastUsername.length; i++){
-    if(username.length > 15){
-      username = username.substr(0,username.length - 1);
-      console.log("Username <"+username+"> is too long!");
     }
   }
 
-  //crap
-  if(camRotation < -PI){
-    camRotation += PI*2
-  }
-  if(camRotation > PI){
-    camRotation -= PI*2
-  }
-  cam.setPosition(player[x], player[y] - crouchDampening, player[z]);
   displayHud();
-}
+
+  clr = color(255);
+  clr.setAlpha(150);
+  fill(clr);
+  noStroke();
+  rect((x - 1) * ssm, (y - 3.5) * ssm, 2 * ssm, 7 * ssm);
+  rect((x - 3.5) * ssm, (y - 1) * ssm, 7 * ssm, 2 * ssm);
+  fill(50);
+  circle(x * ssm, y * ssm, 2 * ssm);
+
+  if (holdingMouse[0] === true) {
+    clr = color(100, 100, 200);
+    clr.setAlpha(100);
+    stroke(255);
+    strokeWeight(.5);
+    fill(clr);
+    rect(heldx, heldy, (x * ssm) - heldx, (y * ssm) - heldy);
+  }
 }
 
-function mouseReleased(){
-  for (var i = 0; i < draggables.length; i++) {
-    draggables[i].released();
-  }
-}
-
-function mousePressed(){
-  for (var i = 0; i < draggables.length; i++) {
-    draggables[i].pressed();
-  }
-  if(inMenu === false){
-    requestPointerLock();
-  }
-  if(mouseButton === LEFT){
-    if(crouching === 0){
-      //bullets.push(new Bullet(camRotation, camTilt, player[x] - Math.sin(camRotation) * 20, player[y]-25 - Math.sin(camTilt) * -20, player[z] - Math.cos(camRotation) * 20));
-    } else if(crouching === 1){
-      //bullets.push(new Bullet(camRotation, camTilt, player[x] - Math.sin(camRotation) * 20, player[y]-13 - Math.sin(camTilt) * -20, player[z] - Math.cos(camRotation) * 20));
+function mousePressed() {
+  if (hudMenu[1] === 1) {
+    for (var i = 0; i < menuOptions[0].length; i++) {
+      if (round(((i + 1) * 40) / 40) === round(x / 40) && gridClicked()[1] < 10 && gridClicked()[1] > 7) {
+        buildingSelected = menuOptions[0][i][0];
+        console.log(menuOptions[0][i][1]);
+        console.log(buildingSelected);
+      }
     }
   }
-  console.log(abs(Math.cos(camRotation) * (0.01 * (1.5/(2-onGround)))));
+  if (hudMenu[1] === 2) {
+    for (var i = 0; i < menuOptions[1].length; i++) {
+      if (round(((i + 1) * 40) / 40) === round(x / 40) && gridClicked()[1] < 10 && gridClicked()[1] > 7) {
+        buildingSelected = menuOptions[1][i][0];
+        console.log(buildingSelected);
+      }
+    }
+  }
+  if (hudMenu[1] === 3) {
+    for (var i = 0; i < menuOptions[2].length; i++) {
+      if (round(((i + 1) * 40) / 40) === round(x / 40) && gridClicked()[1] < 10 && gridClicked()[1] > 7) {
+        buildingSelected = menuOptions[2][i][0];
+        console.log(buildingSelected);
+      }
+    }
+  }
+
+  if (y < 420) {
+    if (hudMenu[0] === false) {
+      placeBuilding(buildingSelected, gridClicked()[0], gridClicked()[1], 1); //temp
+    }
+    if (hudMenu[0]) {
+      if (y >= 340 && x <= 280) {
+      } else {
+        placeBuilding(buildingSelected, gridClicked()[0], gridClicked()[1], 1); //temp
+      }
+    }
+  }
+
+  requestPointerLock();
+
+  if (mouseButton === LEFT) {
+    holdingMouse[0] = true;
+  }
+  if (mouseButton === RIGHT) {
+  }
+
+  if (holdingMouse[0] === true) {
+    heldx = x * ssm;
+    heldy = y * ssm;
+  }
+
+  console.log(gridClicked());
 }
+
+function mouseReleased() {
+
+  if (mouseButton === LEFT) {
+    holdingMouse[0] = false;
+    holdingMouse[1] = false;
+  }
+  if (mouseButton === RIGHT) {
+    holdingMouse[1] = false;
+    holdingMouse[0] = false;
+  }
+}
+
+function gridClicked() { //gridClicked[0] is X clicked, and [1] is for Y
+  let clickedon = [Math.floor(((x * ssm) / (20 * ssm)) + xOffset), Math.floor(((y * ssm) / (20 * ssm)) + yOffset)];
+  return (clickedon)
+}
+
+function displayHud() {
+  noStroke();
+  fill(50);
+  rect(0, 420 * ssm, 420 * ssm, 80 * ssm);
+  fill(80);
+  rect(420 * ssm, 420 * ssm, 100 * ssm, 55 * ssm);
+  fill(100);
+  rect(420 * ssm, 475 * ssm, 100 * ssm, 25 * ssm);
+
+  //farms
+  strokeWeight(2 * ssm);
+  stroke(120, 65, 0);
+  fill(250, 150, 50);
+  rect(20 * ssm, 440 * ssm, 40 * ssm, 40 * ssm);
+  fill(0);
+  noStroke();
+  textAlign(CENTER);
+  textSize(12 * ssm);
+  text("Farms", 40 * ssm, 458 * ssm);
+  textSize(9 * ssm);
+  text("Press 1", 40 * ssm, 468 * ssm);
+
+  //defense
+  strokeWeight(2 * ssm);
+  stroke(65, 120, 0);
+  fill(150, 250, 50);
+  rect(80 * ssm, 440 * ssm, 40 * ssm, 40 * ssm);
+  fill(0);
+  noStroke();
+  textAlign(CENTER);
+  textSize(10 * ssm);
+  text("Defense", 100 * ssm, 458 * ssm);
+  textSize(9 * ssm);
+  text("Press 2", 100 * ssm, 468 * ssm);
+
+  //defense
+  strokeWeight(2 * ssm);
+  stroke(0, 65, 120);
+  fill(50, 150, 250);
+  rect(140 * ssm, 440 * ssm, 40 * ssm, 40 * ssm);
+  fill(0);
+  noStroke();
+  textAlign(CENTER);
+  textSize(12 * ssm);
+  text("Units", 160 * ssm, 458 * ssm);
+  textSize(9 * ssm);
+  text("Press 3", 160 * ssm, 468 * ssm);
+
+  fill(50, 255, 50);
+  text("Money: $" + money, 460 * ssm, 490 * ssm);
+  fill(255);
+  if (buildingSelected != undefined) {
+    text("Placing:", 460 * ssm, 460 * ssm);
+    text(buildingSelected, 460 * ssm, 470 * ssm);
+  }
+
+  for (var i = 0; i < buildings.length; i++) {
+    if (buildings[i][1] === gridClicked()[0] && buildings[i][2] === gridClicked()[1]) {
+      fill(255);
+      text("Level " + buildings[i][3] + " " + buildings[i][0], 460 * ssm, 435 * ssm);
+      fill(0);
+      rect(430 * ssm, 440 * ssm, 60 * ssm, 5 * ssm);
+      fill(255, 0, 0);
+      rect(430 * ssm, 440 * ssm, ((buildings[i][5] / buildings[i][6]) * 60) * ssm, 5 * ssm);
+    }
+  }
+
+  if (chat.length > 3) {
+    chat.splice(0, 1);
+  }
+
+  for (var i = 0; i < chat.length; i++) {
+    textAlign(LEFT);
+    textSize(10 * ssm);
+    noStroke();
+    clr = color(255);
+    if (showChat > 255) {
+      clr.setAlpha(255);
+    } else {
+      clr.setAlpha(showChat);
+    }
+
+    if (showChat === 0) {
+      chat.splice(0, chat.length);
+    }
+
+    fill(clr);
+    text(chat[i], 20 * ssm, (20 * i + 20) * ssm);
+  }
+  if (showChat > 0) { showChat -= 1; }
+
+  //--------------------------------------------------------------
+
+  if (hudMenu[0]) {
+    if (hudMenu[1] === 1) {
+
+      clr = color(250, 150, 50);
+      clr.setAlpha(150);
+      fill(clr);
+      rect(0, 340 * ssm, 320 * ssm, 80 * ssm);
+      fill(250, 150, 50);
+      stroke(100, 65, 15);
+      strokeWeight(3);
+
+      for (var i = 0; i < menuOptions[0].length; i++) {
+
+        fill(250, 150, 50);
+        stroke(100, 65, 15);
+        strokeWeight(3);
+        rect(((i * 60) + 20) * ssm, 360 * ssm, 40 * ssm, 40 * ssm);
+        if (menuOptions[0][i][2] != null) {
+          image(menuOptions[0][i][2], ((i * 60) + 30) * ssm, 364 * ssm, 20 * ssm, 20 * ssm);
+        }
+        textAlign(CENTER);
+        textSize(12 * ssm);
+        noStroke();
+        fill(0);
+        text(menuOptions[0][i][0], ((i * 60) + 40) * ssm, 414 * ssm);
+        textSize(10 * ssm);
+        fill(0);
+        text(`$${menuOptions[0][i][1]}`, ((i * 60) + 40) * ssm, 396 * ssm);
+      }
+
+    }
+    if (hudMenu[1] === 2) {
+
+      clr = color(150, 250, 50);
+      clr.setAlpha(150);
+      fill(clr);
+      rect(0, 340 * ssm, 320 * ssm, 80 * ssm);
+
+      for (var i = 0; i < menuOptions[1].length; i++) {
+
+        fill(250, 150, 50);
+        stroke(100, 65, 15);
+        strokeWeight(3);
+        rect(((i * 60) + 20) * ssm, 360 * ssm, 40 * ssm, 40 * ssm);
+        if (menuOptions[1][i][2] != null) {
+          image(menuOptions[1][i][2], ((i * 60) + 30) * ssm, 364 * ssm, 20 * ssm, 20 * ssm);
+        }
+        textAlign(CENTER);
+        textSize(12 * ssm);
+        noStroke();
+        fill(0);
+        text(menuOptions[1][i][0], ((i * 60) + 40) * ssm, 414 * ssm);
+        textSize(10 * ssm);
+        fill(0);
+        text(`$${menuOptions[1][i][1]}`, ((i * 60) + 40) * ssm, 396 * ssm);
+
+      }
+
+    }
+    if (hudMenu[1] === 3) {
+
+      clr = color(50, 150, 250);
+      clr.setAlpha(150);
+      fill(clr);
+      rect(0, 340 * ssm, 320 * ssm, 80 * ssm);
+
+      for (var i = 0; i < menuOptions[2].length; i++) {
+
+        fill(250, 150, 50);
+        stroke(100, 65, 15);
+        strokeWeight(3);
+        rect(((i * 60) + 20) * ssm, 360 * ssm, 40 * ssm, 40 * ssm);
+        if (menuOptions[0][i][2] != null) {
+          image(menuOptions[2][i][2], ((i * 60) + 30) * ssm, 364 * ssm, 20 * ssm, 20 * ssm);
+        }
+        textAlign(CENTER);
+        textSize(12 * ssm);
+        noStroke();
+        fill(0);
+        text(menuOptions[2][i][0], ((i * 60) + 40) * ssm, 414 * ssm);
+        textSize(10 * ssm);
+        fill(0);
+        text(`$${menuOptions[2][i][1]}`, ((i * 60) + 40) * ssm, 396 * ssm);
+      }
+    }
+  }
+}
+
 
 function keyPressed() {
-  if(keyCode === 81 && inMenu === false && heldItem === "bow"){
-    heldItem = "sword";
-  } 
-  else if (keyCode === 81 && inMenu === false && heldItem === "sword") {        heldItem = "bow";
-  }
-
-  if(keyCode === 85 && inMenu === false){
-    username = prompt("Username");
-    lastUsername = username;
-  }
-
-    if(keyCode === 13 && showChat === true){
-      lastMessage = chatInput.value();
-      var message = chatInput.value();
-
-      for(i = 0; i < message.length; i++){
-        if(lastMessage.length > 70){
-          lastMessage = lastMessage.substr(0,lastMessage.length-1);
-          console.log("Message <"+lastMessage+"> is too long!");
-        }
-      }
-
-      var msg = {
-        m: lastMessage,
-        u: username
-      }
-
-      if(chatInput.value() != ""){
-        chatHistory.push("(You) <"+username+"> "+lastMessage);
-        socket.emit('chatMessage', msg);
-      }
-
-      chatInput.value("");
-    }
-    
-  if (keyCode === 192) { //showChat
-    if (keyIsDown(192) && showChat === false && inMenu === false) {
-      exitPointerLock();
-      inMenu = true;
-      showChat = true;
-      chatInput.show();
-      chatInput.position(-((window.innerWidth / window.innerHeight) / 1.7) + 220,20);
-    }
-    else{
-      requestPointerLock();
-      showChat = false;
-      inMenu = false;
-      chatInput.hide();
-      chatInput.value("");
+  if (keyCode === 49) {//1
+    if (hudMenu[0] && hudMenu[1] === 1) {
+      hudMenu[0] = false;
+    } else {
+      hudMenu[0] = true;
+      hudMenu[1] = 1;
     }
   }
-
-  if (keyCode === 187) { //showAdvancedHud
-    if (keyIsDown(187) && showAdvancedHud === false && inMenu === false) {
-      showAdvancedHud = true;
-    }
-    else{
-      requestPointerLock();
-      showAdvancedHud = false;
+  if (keyCode === 50) {//2
+    if (hudMenu[0] && hudMenu[1] === 2) {
+      hudMenu[0] = false;
+    } else {
+      hudMenu[0] = true;
+      hudMenu[1] = 2;
     }
   }
-  
-  /*if (keyCode === 27) { //escMenu
-    if (keyIsDown(27) && showChat === false) {
-      exitPointerLock();
-      escMenu = true;
-      inMenu = true;
+  if (keyCode === 51) {//3
+    if (hudMenu[0] && hudMenu[1] === 3) {
+      hudMenu[0] = false;
+    } else {
+      hudMenu[0] = true;
+      hudMenu[1] = 3;
     }
-    else{
-      requestPointerLock();
-      escMenu = false;
-      inMenu = false;
-    }
-  }
-  */
-
-  if (keyCode === 32) {
-    if (keyIsDown(32) && canJump >= 1 && inMenu === false) { //Space
-      player[yvel] = (-0.065 * (abs(player[xvel]) + abs(player[zvel]) + 22));
-      canJump -= 1;
-    }
-  }
-
-  gravity = round(gravity,4);
-
-}
-
-function newPacket(data){
-  var inArray = false;
-  for(i = 0; i < players.length; i++){
-    if(players[i].id === data.id){
-      inArray = true;
-      players[i] = data;
-    }
-  }
-  if(inArray === false){
-    players.push(data);
-    chatHistory.push("<Client> Player " + data.id + " loaded to client");
   }
 }
-
-function raycast(x1,y1,z1,r,t,x2,y2,z2,dx,dy,dz,range,p,area){
-
-  let distMult = Math.cos(t);
-
-  let ptX = x1 - (Math.sin(r) * range) * distMult;
-  let ptY = y1 - Math.sin(t) * -range;
-  let ptZ = z1 - (Math.cos(r) * range) * distMult;
-  
-  let diffX = (ptX-x1);
-  let diffY = (ptY-y1);
-  let diffZ = (ptZ-z1);
-  
-  for(i=1 ; i<=p ; i++){
-
-    if((x1+((diffX/p)*i)) > x2-(dx/2) && (x1+((diffX/p)*i)) < x2+(dx/2) && (y1+((diffY/p)*i)) > y2-(dy/2) && (y1+((diffY/p)*i)) < y2+(dy/2) && (z1+((diffZ/p)*i)) > z2-(dz/2) && (z1+((diffZ/p)*i)) < z2+(dz/2)){
-
-      return true;
-
-    }
-
-    if(dist(x1+((diffX/p)*i), y1+((diffY/p)*i), z1+((diffZ/p)*i), x2, y2, z2) <= area){
-
-      return true;
-    }
-    
-  }
-
-  return false;
-}
-
-function displayHud(){
-
-  noStroke();
-  translate(player[x] - (Math.sin(camRotation) * 0.5) * Math.cos(camTilt), (player[y] - crouchDampening - Math.sin(camTilt) * -0.5), player[z] - (Math.cos(camRotation) * 0.5) * Math.cos(camTilt));
-
-      rotateY(camRotation);
-      rotateX(camTilt);
-      
-      fill(0);
-      circle(0,0,25 / window.innerWidth);
-
-      rect(-((window.innerWidth / window.innerHeight) / 1.7), 0.38, 0.6, 0.18);
-
-      rect(-((window.innerWidth / window.innerHeight) / 1.7), 0.28, 0.6, 0.08);
-
-      rect(-(((window.innerWidth / window.innerHeight) / 1.7)+0.07), 0.56, 0.06, -0.28);
-
-        translate(0,0,0.0005);
-
-      fill(120,20,20);
-      rect(-(((window.innerWidth / window.innerHeight) / 1.7)-0.02), 0.4, (0.56*player[health]) / player[maxHealth], 0.14);
-
-      fill(50,125,250);
-      rect(-(((window.innerWidth / window.innerHeight) / 1.7)+0.05), 0.54, 0.02, ((player[combatXp]) / player[combatXpNeeded]) * -0.24);
-
-      if(player[stamina] >= 0.1){
-        fill(30,100,30);
-        rect(-(((window.innerWidth / window.innerHeight) / 1.7)-0.02), 0.3, (0.56*player[stamina]) / player[maxStamina], 0.04);
-      }
-
-        translate(0,0,-0.0005);
-
-        translate(0,0,0.00045);
-
-      fill(20);
-      rect(-(((window.innerWidth / window.innerHeight) / 1.7)-0.02), 0.4, 0.56, 0.14);
-
-      fill(20);
-      rect(-(((window.innerWidth / window.innerHeight) / 1.7)-0.02), 0.3, 0.56, 0.04);
-
-      fill(20);
-      rect(-(((window.innerWidth / window.innerHeight) / 1.7)+0.05), 0.54, 0.02, -0.24);
-
-        translate(0,0,-0.00045);
-        
-      if(showChat === true || showAdvancedHud === true){
-        fill(0)
-        //rect(-((window.innerWidth / window.innerHeight) / 1.7),0.1,0.4,-0.40)
-        for(var i = 0; i < chatHistory.length; i++){
-          fill(255);
-          translate(0,0,0.0005);
-          textSize(.03);
-          textAlign(LEFT,CENTER);
-          text(chatHistory[i],-((window.innerWidth / window.innerHeight) / 1.7)+ 0.01, (0.05 * i)-0.54);
-          translate(0,0,-0.0005);
-        }
-      } else {
-        translate(0,0,0.0005);
-        textSize(.03);
-        textAlign(LEFT,CENTER);
-        fill(255);
-        text("Press ` to expand the chat\n "+chatHistory[chatHistory.length - 1],-((window.innerWidth / window.innerHeight) / 1.7)+ 0.01,-0.54);
-        //coordinates
-        if(showAdvancedHud === true){
-          text("Exact Coordinates: " + round(player[x]) + " " + round(player[y]) + " " + round(player[z]),-((window.innerWidth / window.innerHeight) / 1.7)+ 1.0,-0.54);
-        translate(0,0,-0.0005);
-        } else {
-          text("Coordinates: " + round(player[x] / 10) + " " + round(player[y] / 10) + " " + round(player[z] / 10),-((window.innerWidth / window.innerHeight) / 1.7)+ 1.0,-0.54);
-        }
-        translate(0,0,-0.0005);
-        }
-      
-      translate(1.9, 2.2, -1);
-      rotateZ(PI);
-      scale(2);
-      texture(textures[2]);
-      if(heldItem === "sword"){
-        model(models[0]);
-      }
-      if(heldItem === "bow"){
-        translate(0,0.5,0);
-        scale(0.015);
-        model(models[1]);
-        scale(105);
-        translate(0,-0.5,0);
-      }
-      scale(0.5);
-      rotateZ(-PI);
-      translate(-1.9, -2.2, 1);
-      
-
-
-      rotateX(-camTilt);
-      rotateY(-camRotation);
-
-    translate(-(player[x] - (Math.sin(camRotation) * 0.5) * Math.cos(camTilt)), -((player[y] - crouchDampening - Math.sin(camTilt) * -0.5) - playerHeight+5), -(player[z] - (Math.cos(camRotation) * 0.5) * Math.cos(camTilt)));
-}
-
-function recievedMessage(msg){
-  chatHistory.push("<"+msg.u+"> "+msg.m);
-}
-
-function enemyFunction(){
-  
-}
-
-function enemyDataFunction(enemyList){
-enemyArray = enemyList;
-}
-
-/*
-function dayTimeFunction(data){
-  gameTime = data.time;
-
-  console.log(gameTime);
-
-  
-  if(gameTime < 900 && gameTime > 300){            //day > night
-
-    currentLight[0] = dayLight[0] - (((dayLight[0]-nightLight[0]) / 500) * (gameTime-300));
-    currentLight[1] = dayLight[1] - (((dayLight[1]-nightLight[1]) / 500) * (gameTime-300));
-    currentLight[2] = dayLight[2] - (((dayLight[2]-nightLight[2]) / 500) * (gameTime-300));
-    currentBackground[0] = dayBackground[0] - (((dayBackground[0]-nightBackground[0]) / 500) * (gameTime-300));
-    currentBackground[1] = dayBackground[1] - (((dayBackground[1]-nightBackground[1]) / 500) * (gameTime-300));
-    currentBackground[2] = dayBackground[2] - (((dayBackground[2]-nightBackground[2]) / 500) * (gameTime-300));
-    currentAmbient = dayAmbient - (((dayAmbient-nightAmbient) / 500) * (gameTime-300));
-
-  } else if(gameTime < 1100 && gameTime > 900){    //night > day
-
-    currentLight[0] = nightLight[0] - (((nightLight[0]-dayLight[0]) / 200) * (gameTime-900));
-    currentLight[1] = nightLight[1] - (((nightLight[1]-dayLight[1]) / 200) * (gameTime-900));
-    currentLight[2] = nightLight[2] - (((nightLight[2]-dayLight[2]) / 200) * (gameTime-900));
-    currentBackground[0] = nightBackground[0] - (((nightBackground[0]-dayBackground[0]) / 200) * (gameTime-900));
-    currentBackground[1] = nightBackground[1] - (((nightBackground[1]-dayBackground[1]) / 200) * (gameTime-900));
-    currentBackground[2] = nightBackground[2] - (((nightBackground[2]-dayBackground[2]) / 200) * (gameTime-900));
-    currentAmbient = nightAmbient - (((nightAmbient-dayAmbient) / 200) * (gameTime-900));
-
-  }
-  if(gameTime >= 1100 || gameTime <= 300){   //day
-
-    currentAmbient = dayAmbient;
-    currentLight = dayLight;
-    currentBackground = dayBackground;
-
-  }
-  if(gameTime >= 800 && gameTime <= 900){  //night
-
-    currentAmbient = nightAmbient;
-    currentLight = nightLight;
-    currentBackground = nightBackground;
-
-  }
-  
-}
-*/
